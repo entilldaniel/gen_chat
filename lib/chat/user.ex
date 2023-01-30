@@ -31,11 +31,9 @@ defmodule Chat.User do
       {:ok, data} ->
         case Chat.Command.UserCommand.parse(data) do
           {:error, reason} ->
-            Logger.warn("Could not parse: #{inspect(reason)}}")
             :gen_tcp.send(state.socket, reason)
 
           command ->
-            Logger.info("THE COMMAND WAS #{inspect(command)}")
             Chat.Command.Executor.handle_user_command(state.handle, command)
         end
 
@@ -52,9 +50,9 @@ defmodule Chat.User do
 
   @impl true
   def handle_cast({:message, envelope}, state) do
-    Logger.info("handling cast")
     {sender, message} = envelope
     :gen_tcp.send(state.socket, "MESSAGE FROM: #{sender}\n\n#{message}")
     {:noreply, state}
   end
 end
+

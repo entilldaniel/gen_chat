@@ -2,7 +2,7 @@ defmodule Chat.Command.UserCommand do
   require Logger
   
   @three_parts [:PUBLIC, :PRIVATE]
-  @two_parts [:EXIT, :ENTER, :LIST_USERS, :REGISTER]
+  @two_parts [:EXIT, :ENTER, :LIST_USERS, :REGISTER, :CREATE]
   @singles [:QUIT, :LIST_ROOMS]
 
   def parse(line) do
