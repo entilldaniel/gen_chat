@@ -1,7 +1,7 @@
 defmodule Chat.Command.Executor do
   require Logger
 
-  def handle_user_command(from, {command, target, value}) do
+  def handle_user_command(_pid, from, {command, target, value}) do
     case command do
       :PUBLIC ->
         [{pid, nil}] = Registry.lookup(Registry.Rooms, target)
@@ -37,7 +37,6 @@ defmodule Chat.Command.Executor do
     case Registry.lookup(Registry.Rooms, name) do
       [{_, nil}] ->
         {:ok, nil}
-
       _ ->
         Chat.RoomSupervisor.add_room(name)
         Logger.info("Room #{name} created by #{user_handle}.")

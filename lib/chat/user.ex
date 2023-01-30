@@ -23,11 +23,11 @@ defmodule Chat.User do
   @impl true
   def handle_continue(:user, state) do
     Logger.info("#{state.handle} - #{inspect(self())}")
-    Task.async(fn -> handle_input(state) end)
+    Task.async(fn -> handle_input(self(), state) end)
     {:noreply, state}
   end
 
-  defp handle_input(state) do
+  defp handle_input(pid, state) do
     case :gen_tcp.recv(state.socket, 0, 10_000) do
       {:ok, data} ->
         case Chat.Command.UserCommand.parse(data) do
@@ -35,18 +35,15 @@ defmodule Chat.User do
             :gen_tcp.send(state.socket, reason)
             
           command ->
-            Chat.Command.Executor.handle_user_command(state.handle, command)
+            Chat.Command.Executor.handle_user_command(pid, state.handle, command)
         end
-
-        {:noreply, state, {:continue, :user}}
-
+        :ok
       {:error, :timeout} ->
-        {:noreply, state, {:continue, :user}}
-
+        :ok
       {:error, _} ->
-        {:stop, :normal}
+        :stop
     end
-    handle_input(state)
+    handle_input(pid, state)
   end
 
   @impl true
