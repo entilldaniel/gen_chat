@@ -1,19 +1,11 @@
-# Chat
+Chat
 
-**TODO: Add description**
+This is a simple chat server that I'm implementing in my journey to learn elixir. 
 
-## Installation
+The protocol is very simple there are a few commands so far that you can see in `lib/command/user_command.ex`
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `chat` to your list of dependencies in `mix.exs`:
+# Installation #
 
-```elixir
-def deps do
-  [
-    {:chat, "~> 0.1.0"}
-  ]
-end
-```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
