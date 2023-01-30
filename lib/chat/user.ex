@@ -34,7 +34,8 @@ defmodule Chat.User do
           {:error, reason} ->
             :gen_tcp.send(state.socket, reason)
             
-          command ->
+            command ->
+            Logger.info("Handling command #{inspect command}")
             Chat.Command.Executor.handle_user_command(pid, state.handle, command)
         end
         :ok
