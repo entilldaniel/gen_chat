@@ -1,4 +1,4 @@
-defmodule Chat.UserSupervisor do
+defmodule Chat.RoomSupervisor do
   use DynamicSupervisor
 
   def start_link(arg),
@@ -7,9 +7,8 @@ defmodule Chat.UserSupervisor do
   def init(_arg),
     do: DynamicSupervisor.init(strategy: :one_for_one)
 
-  def add_user(data),
-    do: DynamicSupervisor.start_child(__MODULE__, {Chat.User, data})
+  def add_room(data),
+    do: DynamicSupervisor.start_child(__MODULE__, {Chat.Room, data})
 
   
 end
-

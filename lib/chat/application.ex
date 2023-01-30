@@ -10,8 +10,9 @@ defmodule Chat.Application do
     children = [
       {Chat.EntryServer, []},
       {Registry, keys: :unique, name: Registry.Users},
+      {Chat.UserSupervisor, []},
       {Registry, keys: :unique, name: Registry.Rooms},
-      {Chat.UserSupervisor, []}
+      {Chat.RoomSupervisor, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

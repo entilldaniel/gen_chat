@@ -1,6 +1,7 @@
 defmodule Chat.User do
   use GenServer
   require Logger
+
   defstruct handle: nil, rooms: [], socket: nil
 
   def start_link({name, _} = data) do
@@ -15,7 +16,7 @@ defmodule Chat.User do
   @impl true
   def init({name, socket}) do
     state = %__MODULE__{handle: name, socket: socket}
-    :gen_tcp.send(socket, "User #{name} registered\r\n\r\n")
+    :gen_tcp.send(socket, "Welcome #{name}! You are registered!\n\n")
     {:ok, state, {:continue, :user}}
   end
 
@@ -32,7 +33,7 @@ defmodule Chat.User do
         case Chat.Command.UserCommand.parse(data) do
           {:error, reason} ->
             :gen_tcp.send(state.socket, reason)
-
+            
           command ->
             Chat.Command.Executor.handle_user_command(state.handle, command)
         end
