@@ -18,7 +18,9 @@ defmodule Chat.EntryServer do
       reuseaddr: true
     ]
 
-    case :gen_tcp.listen(5000, options) do
+    port = Application.fetch_env!(:chat, :port)
+    Logger.info("Starting chat on port #{port}")
+    case :gen_tcp.listen(port, options) do
       {:ok, socket} ->
         state = %__MODULE__{listen_socket: socket, supervisor: supervisor}
         {:ok, state, {:continue, :accept}}
