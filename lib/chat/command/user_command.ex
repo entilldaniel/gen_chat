@@ -3,7 +3,7 @@ defmodule Chat.Command.UserCommand do
   
   @three_parts [:PUBLIC, :PRIVATE]
   @two_parts [:EXIT, :ENTER, :LIST_USERS, :REGISTER, :CREATE]
-  @singles [:QUIT, :LIST_ROOMS]
+  @singles [:DISCONNECT, :LIST_ROOMS, :WHOAMI]
 
   def parse(line) do
     String.split(line)

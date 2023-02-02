@@ -17,8 +17,8 @@ defmodule Command.UserCommandTest do
   end
 
   test "can parse singles" do
-    line = "QUIT"
+    line = "DISCONNECT"
     {command} = Chat.Command.UserCommand.parse(line)
-    assert command == :QUIT
+    assert command == :DISCONNECT
   end
 end

@@ -80,3 +80,4 @@ defmodule Chat.EntryServer do
     end
   end
 end
+
