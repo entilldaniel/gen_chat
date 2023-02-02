@@ -22,10 +22,22 @@ defmodule Chat.Room do
   end
 
   @impl true
-  def handle_cast({:join, handle}, state) do
-    state = %{state | :users => [handle | state.users]}
-    {:noreply, state}
+  def handle_call(:list, _from, state) do
+    Logger.info("listing users #{inspect(state.users)} in room #{state.name}")
+    {:reply, state.users, state}
   end
+  
+  @impl true
+  def handle_call({:enter, handle}, _from, state) do
+    state = %{state | :users => Enum.uniq([handle | state.users])}
+    {:reply, state.users, state}
+  end
+
+  @impl true
+  def handle_cast({:message, _envelope}, state) do
+    Logger.info("Say something to everyone!")
+    {:noreply, state}
+  end  
 
   @impl true
   def handle_cast({:leave, handle}, state) do
@@ -37,16 +49,7 @@ defmodule Chat.Room do
     {:noreply, state}
   end
 
-  @impl true
-  def handle_call(:list, _from, state) do
-    Logger.info("listing users #{inspect(state.users)} in room #{state.name}")
-    {:reply, state.users, state}
-  end
+  
 
-  @impl true
-  def handle_call({:enter, handle}, _from, state) do
-    Logger.info("User #{handle} has entered the room #{state.name}")
-    state = %{state | :users => Enum.uniq([handle | state.users])}
-    {:reply, state.users, state}
-  end
+  
 end

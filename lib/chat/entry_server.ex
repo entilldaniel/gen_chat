@@ -1,5 +1,6 @@
 defmodule Chat.EntryServer do
   use GenServer
+  alias Chat.Comm.Message
   require Logger
 
   defstruct [:listen_socket, :supervisor]
@@ -20,6 +21,7 @@ defmodule Chat.EntryServer do
 
     port = Application.fetch_env!(:chat, :port)
     Logger.info("Starting chat on port #{port}")
+
     case :gen_tcp.listen(port, options) do
       {:ok, socket} ->
         state = %__MODULE__{listen_socket: socket, supervisor: supervisor}
@@ -62,22 +64,14 @@ defmodule Chat.EntryServer do
     Logger.info("#{inspect(data)}")
     command = Chat.Command.UserCommand.parse(data)
 
-    case command do
-      {:REGISTER, name} ->
-        case Registry.lookup(Registry.Users, name) do
-          [{_, nil}] ->
-            :gen_tcp.send(socket, "NOK taken\r\n\r\n")
-            {:ok, nil}
+    {_, message} =
+      case command do
+        {:REGISTER, _} ->
+          Chat.Command.Executor.handle_user_command(socket, command)
 
-          [] ->
-            :gen_tcp.send(socket, "OK REGISTERED\r\n\r\n")
-            Chat.UserSupervisor.add_user({name, socket})
-            {:ok, :handled}
-        end
-
-      _ ->
-        :gen_tcp.send(socket, "NOK unknown command\r\n\r\n")
-    end
+        _ ->
+          {:error, "Unknown command."}
+      end
+    Message.send(socket, message)
   end
 end
-

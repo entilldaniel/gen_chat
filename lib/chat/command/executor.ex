@@ -1,56 +1,67 @@
 defmodule Chat.Command.Executor do
   require Logger
-
-  def handle_user_command(_pid, from, {command, target, value}) do
+  
+  def handle_user_command(payload, {command, target, value}) do
     case command do
-      :PUBLIC ->
-        [{pid, nil}] = Registry.lookup(Registry.Rooms, target)
-        Chat.Room.send_message(pid, {from, value})
-
-      :PRIVATE ->
-        [{pid, nil}] = Registry.lookup(Registry.Users, target)
-        Chat.User.send_message(pid, {from, value})
-    end
-
-    :ok
-  end
-
-  def handle_user_command(_pid, from, {command, target}) do
-    case command do
-      :CREATE -> create_room(from, target)
-      :EXIT -> leave_room(from, target)
-      :ENTER -> enter_room(from, target)
-      :LIST_USERS -> list_users(from, target)
-      :REGISTER -> Logger.info("NOT IMPLEMENTED HERE")
+      :PUBLIC -> send_room_message(payload, target, value)
+      :PRIVATE -> send_private_message(payload, target, value)
     end
   end
 
-  def handle_user_command(_pid, _from, {command}) do
+  def handle_user_command(payload, {command, target}) do
+    case command do
+      :CREATE -> create_room(payload, target)
+      :EXIT -> leave_room(payload, target)
+      :ENTER -> enter_room(payload, target)
+      :LIST_USERS -> list_users(payload, target)
+      :REGISTER -> register(payload, target)
+    end
+  end
+
+  def handle_user_command(_payload, {command}) do
     case command do
       :DISCONNECT -> Logger.info("NOT IMPLEMENTED")
       :LIST_ROOMS -> list_rooms()
     end
   end
 
-  defp leave_room(from, target) do
-    case Registry.lookup(Registry.Rooms, target) do
-      [{pid, _}] ->
-        {:ok, Chat.Room.leave_room(pid, from)}
-      _ ->
-        Logger.info("No room by that name.")
-        {:nok, "room #{target} not found."}
+  defp send_room_message(sender, target, message) do
+      case Registry.lookup(Registry.Rooms, target) do
+        [{pid, nil}] -> Chat.Room.send_message(pid, {sender, message})
+        _ -> {:error, "Room #{target} not found."}
+      end
+  end
+
+  defp send_private_message(sender, target, message) do
+    case Registry.lookup(Registry.Users, target) do
+      [{pid, nil}] -> Chat.User.send_message(pid, {sender, message})
+      _ -> {:error, "User #{target} not found."}
+    end
+    
+  end
+
+  defp register(socket, handle) do
+    case Registry.lookup(Registry.Users, handle) do
+      [{_, nil}] ->
+        {:error, "Handle (#{handle}) already taken"}
+
+      [] ->
+        Chat.UserSupervisor.add_user({handle, socket})
+        {:ok, "OK, #{handle} REGISTERED"}
     end
   end
 
-  defp list_users(from, room) do
-    case Registry.lookup(Registry.Rooms, room) do
-      [{pid, _}] ->
-        Logger.info("Found room #{room} for #{from}")
-        {:ok, Chat.Room.list_users(pid)}
+  defp leave_room(from, target) do
+    case Registry.lookup(Registry.Rooms, target) do
+      [{pid, _}] -> {:ok, Chat.Room.leave_room(pid, from)}
+      _ -> {:error, "Room #{target} not found."}
+    end
+  end
 
-      _ ->
-        Logger.info("No room by that name.")
-        {:nok, "room #{room} not found."}
+  defp list_users(_from, target) do
+    case Registry.lookup(Registry.Rooms, target) do
+      [{pid, _}] -> {:ok, Chat.Room.list_users(pid)}
+      _ -> {:error, "Room #{target} not found."}
     end
   end
 
@@ -59,25 +70,23 @@ defmodule Chat.Command.Executor do
     {:ok, keys}
   end
 
-  defp enter_room(user_handle, room) do
-    Logger.info("Entering the room")
-    case Registry.lookup(Registry.Rooms, room) do
+  defp enter_room(user_handle, target) do
+    case Registry.lookup(Registry.Rooms, target) do
       [{pid, nil}] ->
         result = Chat.Room.enter_room(pid, user_handle)
-        {:ok, "entered room #{room}, here are the people #{result}"}
-      _ ->
-        {:error, "Room #{room} not found."}
+        {:ok, "entered room #{target}, here are the people #{result}."}
+
+      _ -> {:error, "Room #{target} not found."}
     end
   end
 
-  defp create_room(user_handle, name) do
+  defp create_room(_user_handle, name) do
     case Registry.lookup(Registry.Rooms, name) do
       [{_, nil}] ->
-        {:nok, "Room #{name} already exists."}
+        {:error, "Room #{name} already exists."}
 
       _ ->
         Chat.RoomSupervisor.add_room(name)
-        Logger.info("Room #{name} created by #{user_handle}.")
         {:ok, "Room created."}
     end
   end
