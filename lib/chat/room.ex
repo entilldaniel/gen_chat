@@ -30,20 +30,26 @@ defmodule Chat.Room do
   @impl true
   def handle_call({:enter, handle}, _from, state) do
     state = %{state | :users => Enum.uniq([handle | state.users])}
+    [{pid, _}] = Registry.lookup(Registry.Users, handle)
+    Chat.User.add_room(pid, state.name)
     {:reply, state.users, state}
   end
 
   @impl true
-  def handle_cast({:message, message}, state) do
-    Enum.each(state.users, fn user ->
-      case Registry.lookup(Registry.Users, user) do
-        [{pid, _}] ->
-          Chat.User.send_message(pid, message)
+  def handle_cast({:message, {handle, message}}, state) do
+    if handle in state.users do
+      Enum.each(state.users, fn user ->
+        case Registry.lookup(Registry.Users, user) do
+          [{pid, _}] ->
+            Chat.User.send_message(pid, message)
 
-        _ ->
-          Logger.info("User #{user} not found.")
-      end
-    end)
+          _ ->
+            Logger.info("User #{user} not found.")
+        end
+      end)
+    else
+      Logger.info("User #{handle} isn't in this room")
+    end
 
     {:noreply, state}
   end
@@ -53,8 +59,12 @@ defmodule Chat.Room do
     users =
       state.users
       |> Enum.filter(fn u -> u != handle end)
-
     state = %{state | :users => users}
-    {:noreply, state}
+    if Enum.empty? state.users do
+      DynamicSupervisor.terminate_child Chat.RoomSupervisor, self()
+      {:stop, :normal, state}
+    else
+      {:noreply, state}
+    end
   end
 end

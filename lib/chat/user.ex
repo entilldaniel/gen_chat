@@ -13,6 +13,8 @@ defmodule Chat.User do
 
   def send_command(pid, command), do: GenServer.cast(pid, {:command, command})
   def send_message(pid, message), do: GenServer.cast(pid, {:message, message})
+  def whoami(pid), do: GenServer.call(pid, :whoami)
+  def add_room(pid, room), do: GenServer.cast(pid, {:room, room})
 
   @impl true
   def init({name, socket}) do
@@ -55,5 +57,17 @@ defmodule Chat.User do
   def handle_cast({:message, message}, state) do
     Message.send(state.socket, message)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:room, room}, state) do
+    state = %{state | :rooms => Enum.uniq([room | state.rooms])}
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:whoami, _from, state) do
+    message = "HANDLE: #{state.handle}\nROOMS: #{state.rooms}\n"
+    {:reply, message, state}
   end
 end

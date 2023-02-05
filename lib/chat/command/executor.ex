@@ -18,19 +18,20 @@ defmodule Chat.Command.Executor do
     end
   end
 
-  def handle_user_command(_payload, {command}) do
+  def handle_user_command(payload, {command}) do
     case command do
       :DISCONNECT -> Logger.info("NOT IMPLEMENTED")
       :LIST_ROOMS -> list_rooms()
+      :WHOAMI -> whoami(payload)
     end
   end
 
   defp send_room_message(sender, target, message) do
       case Registry.lookup(Registry.Rooms, target) do
         [{pid, nil}] ->
-          message = "Room: #{target} SENDER: #{sender}\n#{message}"
-          Chat.Room.send_message(pid, message)
-          {:ok, nil}
+          message = "Room: #{target}\nSENDER: #{sender}\n#{message}"
+          Chat.Room.send_message(pid, {sender, message})
+          {:ok, "OK"}
         _ -> {:error, "Room #{target} not found."}
       end
   end
@@ -40,7 +41,7 @@ defmodule Chat.Command.Executor do
       [{pid, nil}] ->
         message = "MESSAGE FROM #{sender}\n#{message}"
         Chat.User.send_message(pid, message)
-        {:ok, nil}
+        {:ok, "OK"}
       _ -> {:error, "User #{target} not found."}
     end
     
@@ -59,27 +60,32 @@ defmodule Chat.Command.Executor do
 
   defp leave_room(from, target) do
     case Registry.lookup(Registry.Rooms, target) do
-      [{pid, _}] -> {:ok, Chat.Room.leave_room(pid, from)}
+      [{pid, _}] ->
+        Chat.Room.leave_room(pid, from)
+        {:ok, "OK"}
       _ -> {:error, "Room #{target} not found."}
     end
   end
 
   defp list_users(_from, target) do
     case Registry.lookup(Registry.Rooms, target) do
-      [{pid, _}] -> {:ok, Chat.Room.list_users(pid)}
+      [{pid, _}] ->
+        users = Enum.join(Chat.Room.list_users(pid), ", ")
+        {:ok, users}
       _ -> {:error, "Room #{target} not found."}
     end
   end
 
   defp list_rooms() do
     keys = Registry.select(Registry.Rooms, [{{:"$1", :_, :_}, [], [:"$1"]}])
-    {:ok, keys}
+
+    {:ok, Enum.join(keys, ", ")}
   end
 
   defp enter_room(user_handle, target) do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, nil}] ->
-        result = Chat.Room.enter_room(pid, user_handle)
+        result = Enum.join(Chat.Room.enter_room(pid, user_handle), ", ")
         {:ok, "entered room #{target}, here are the people #{result}."}
 
       _ -> {:error, "Room #{target} not found."}
@@ -94,6 +100,15 @@ defmodule Chat.Command.Executor do
       _ ->
         Chat.RoomSupervisor.add_room(name)
         {:ok, "Room created."}
+    end
+  end
+
+  defp whoami(handle) do
+    case Registry.lookup(Registry.Users, handle) do
+      [{pid, nil}] ->
+        result = Chat.User.whoami(pid)
+        {:ok, result}
+        _ -> {:error, "You don't exist."}
     end
   end
 end
