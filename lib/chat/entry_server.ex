@@ -49,8 +49,8 @@ defmodule Chat.EntryServer do
     case :gen_tcp.recv(socket, 0) do
       {:ok, data} ->
         case handle_message(socket, data) do
-          {:ok, :handled} -> {:stop, :normal}
-          {:ok, _} -> handle_connection(socket)
+          {:ok, _} -> {:stop, :normal}
+          {:error, _} -> handle_connection(socket)
         end
 
       {:error, reason} ->
@@ -64,7 +64,7 @@ defmodule Chat.EntryServer do
     Logger.info("#{inspect(data)}")
     command = Chat.Command.UserCommand.parse(data)
 
-    {_, message} =
+    {status, message} =
       case command do
         {:REGISTER, _} ->
           Chat.Command.Executor.handle_user_command(socket, command)
@@ -72,6 +72,8 @@ defmodule Chat.EntryServer do
         _ ->
           {:error, "Unknown command."}
       end
+
     Message.send(socket, message)
+    {status, message}
   end
 end

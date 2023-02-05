@@ -52,9 +52,8 @@ defmodule Chat.User do
   end
 
   @impl true
-  def handle_cast({:message, envelope}, state) do
-    {sender, message} = envelope
-    Message.send(state.socket, "MESSAGE FROM: #{sender}\n#{message}")
+  def handle_cast({:message, message}, state) do
+    Message.send(state.socket, message)
     {:noreply, state}
   end
 end

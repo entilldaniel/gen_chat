@@ -1,20 +1,20 @@
 defmodule Chat.Command.Executor do
   require Logger
   
-  def handle_user_command(payload, {command, target, value}) do
+  def handle_user_command(context, {command, target, value}) do
     case command do
-      :PUBLIC -> send_room_message(payload, target, value)
-      :PRIVATE -> send_private_message(payload, target, value)
+      :PUBLIC -> send_room_message(context, target, value)
+      :PRIVATE -> send_private_message(context, target, value)
     end
   end
 
-  def handle_user_command(payload, {command, target}) do
+  def handle_user_command(context, {command, target}) do
     case command do
-      :CREATE -> create_room(payload, target)
-      :EXIT -> leave_room(payload, target)
-      :ENTER -> enter_room(payload, target)
-      :LIST_USERS -> list_users(payload, target)
-      :REGISTER -> register(payload, target)
+      :CREATE -> create_room(context, target)
+      :EXIT -> leave_room(context, target)
+      :ENTER -> enter_room(context, target)
+      :LIST_USERS -> list_users(context, target)
+      :REGISTER -> register(context, target)
     end
   end
 
@@ -27,14 +27,20 @@ defmodule Chat.Command.Executor do
 
   defp send_room_message(sender, target, message) do
       case Registry.lookup(Registry.Rooms, target) do
-        [{pid, nil}] -> Chat.Room.send_message(pid, {sender, message})
+        [{pid, nil}] ->
+          message = "Room: #{target} SENDER: #{sender}\n#{message}"
+          Chat.Room.send_message(pid, message)
+          {:ok, nil}
         _ -> {:error, "Room #{target} not found."}
       end
   end
 
   defp send_private_message(sender, target, message) do
     case Registry.lookup(Registry.Users, target) do
-      [{pid, nil}] -> Chat.User.send_message(pid, {sender, message})
+      [{pid, nil}] ->
+        message = "MESSAGE FROM #{sender}\n#{message}"
+        Chat.User.send_message(pid, message)
+        {:ok, nil}
       _ -> {:error, "User #{target} not found."}
     end
     

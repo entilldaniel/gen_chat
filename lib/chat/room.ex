@@ -26,7 +26,7 @@ defmodule Chat.Room do
     Logger.info("listing users #{inspect(state.users)} in room #{state.name}")
     {:reply, state.users, state}
   end
-  
+
   @impl true
   def handle_call({:enter, handle}, _from, state) do
     state = %{state | :users => Enum.uniq([handle | state.users])}
@@ -34,22 +34,27 @@ defmodule Chat.Room do
   end
 
   @impl true
-  def handle_cast({:message, _envelope}, state) do
-    Logger.info("Say something to everyone!")
+  def handle_cast({:message, message}, state) do
+    Enum.each(state.users, fn user ->
+      case Registry.lookup(Registry.Users, user) do
+        [{pid, _}] ->
+          Chat.User.send_message(pid, message)
+
+        _ ->
+          Logger.info("User #{user} not found.")
+      end
+    end)
+
     {:noreply, state}
-  end  
+  end
 
   @impl true
   def handle_cast({:leave, handle}, state) do
     users =
       state.users
       |> Enum.filter(fn u -> u != handle end)
-    
+
     state = %{state | :users => users}
     {:noreply, state}
   end
-
-  
-
-  
 end
