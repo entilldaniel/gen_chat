@@ -7,8 +7,7 @@ defmodule Chat.RoomSupervisor do
   def init(_arg),
     do: DynamicSupervisor.init(strategy: :one_for_one)
 
-  def add_room(data),
-    do: DynamicSupervisor.start_child(__MODULE__, {Chat.Room, data})
-
+  def add_room(name, handle),
+    do: DynamicSupervisor.start_child(__MODULE__, {Chat.Room, {name, handle}})
   
 end

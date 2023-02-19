@@ -20,7 +20,7 @@ defmodule Chat.Command.Executor do
 
   def handle_user_command(payload, {command}) do
     case command do
-      :DISCONNECT -> Logger.info("NOT IMPLEMENTED")
+      :DISCONNECT -> {:error, "NOT IMPLEMENTED"}
       :LIST_ROOMS -> list_rooms()
       :WHOAMI -> whoami(payload)
     end
@@ -92,13 +92,13 @@ defmodule Chat.Command.Executor do
     end
   end
 
-  defp create_room(_user_handle, name) do
+  defp create_room(handle, name) do
     case Registry.lookup(Registry.Rooms, name) do
       [{_, nil}] ->
         {:error, "Room #{name} already exists."}
 
       _ ->
-        Chat.RoomSupervisor.add_room(name)
+        Chat.RoomSupervisor.add_room(name, handle)
         {:ok, "Room created."}
     end
   end

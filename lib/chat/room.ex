@@ -9,15 +9,17 @@ defmodule Chat.Room do
   def list_users(pid), do: GenServer.call(pid, :list)
   def leave_room(pid, user_handle), do: GenServer.cast(pid, {:leave, user_handle})
 
-  def start_link(name) do
-    GenServer.start_link(__MODULE__, name, name: process_name(name))
+  def start_link({name, _} = data) do
+    GenServer.start_link(__MODULE__, data, name: process_name(name))
   end
 
   defp process_name(name), do: {:via, Registry, {Registry.Rooms, name}}
 
   @impl true
-  def init(name) do
-    state = %__MODULE__{name: name}
+  def init({name, handle}) do
+    state = %__MODULE__{name: name, users: [handle]}
+    [{pid, _}] = Registry.lookup(Registry.Users, handle)
+    Chat.User.add_room(pid, state.name)
     {:ok, state}
   end
 
