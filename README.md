@@ -5,25 +5,25 @@ This is a simple chat server that I'm implementing in my journey to learn elixir
 The protocol is very simple there are a few commands so far that you can see in `lib/command/user_command.ex`
 
 ## Commands
-### PUBLIC
+### `PUBLIC`
 Send a public message in a room
-### PRIVATE
+### `PRIVATE`
 Send a private message to a handle
-### LIST*ROOMS
+### `LIST_ROOMS`
 List the available rooms
-### ENTER
+### `ENTER`
 Enter a room
-### LIST*USERS
+### `LIST_USERS`
 List the users currently in a room
-### CREATE
+### `CREATE`
 Create a room
-### EXIT
+### `EXIT`
 Leave a room
-### REGISTER
+### `REGISTER`
 Register your handle
-### WHOAMI
+### `WHOAMI`
 Display your handle and the rooms you're currently in.
-### DISCONNECT
+### `DISCONNECT`
 Not implemented
 
 
