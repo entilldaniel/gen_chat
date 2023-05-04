@@ -10,6 +10,4 @@ defmodule Chat.UserSupervisor do
   def add_user(data),
     do: DynamicSupervisor.start_child(__MODULE__, {Chat.User, data})
 
-  
 end
-

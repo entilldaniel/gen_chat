@@ -4,6 +4,4 @@ defmodule Chat.Comm.Message do
   def send(socket, message) do
     :gen_tcp.send(socket, "#{String.trim(message)}\n\n")
   end
-
-  
 end

@@ -71,3 +71,4 @@ defmodule Chat.User do
     {:reply, message, state}
   end
 end
+

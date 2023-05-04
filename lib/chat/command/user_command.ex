@@ -1,6 +1,6 @@
 defmodule Chat.Command.UserCommand do
   require Logger
-  
+
   @three_parts [:PUBLIC, :PRIVATE]
   @two_parts [:EXIT, :ENTER, :LIST_USERS, :REGISTER, :CREATE]
   @singles [:DISCONNECT, :LIST_ROOMS, :WHOAMI]
@@ -40,11 +40,3 @@ defmodule Chat.Command.UserCommand do
     end
   end
 end
-
-
-
-
-
-
-
-

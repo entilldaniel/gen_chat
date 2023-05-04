@@ -9,5 +9,5 @@ defmodule Chat.RoomSupervisor do
 
   def add_room(name, handle),
     do: DynamicSupervisor.start_child(__MODULE__, {Chat.Room, {name, handle}})
-  
+
 end

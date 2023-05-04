@@ -1,6 +1,6 @@
 defmodule Chat.Command.Executor do
   require Logger
-  
+
   def handle_user_command(context, {command, target, value}) do
     case command do
       :PUBLIC -> send_room_message(context, target, value)
@@ -27,13 +27,15 @@ defmodule Chat.Command.Executor do
   end
 
   defp send_room_message(sender, target, message) do
-      case Registry.lookup(Registry.Rooms, target) do
-        [{pid, nil}] ->
-          message = "Room: #{target}\nSENDER: #{sender}\n#{message}"
-          Chat.Room.send_message(pid, {sender, message})
-          {:ok, "OK"}
-        _ -> {:error, "Room #{target} not found."}
-      end
+    case Registry.lookup(Registry.Rooms, target) do
+      [{pid, nil}] ->
+        message = "Room: #{target}\nSENDER: #{sender}\n#{message}"
+        Chat.Room.send_message(pid, {sender, message})
+        {:ok, "OK"}
+
+      _ ->
+        {:error, "Room #{target} not found."}
+    end
   end
 
   defp send_private_message(sender, target, message) do
@@ -42,9 +44,10 @@ defmodule Chat.Command.Executor do
         message = "MESSAGE FROM #{sender}\n#{message}"
         Chat.User.send_message(pid, message)
         {:ok, "OK"}
-      _ -> {:error, "User #{target} not found."}
+
+      _ ->
+        {:error, "User #{target} not found."}
     end
-    
   end
 
   defp register(socket, handle) do
@@ -63,7 +66,9 @@ defmodule Chat.Command.Executor do
       [{pid, _}] ->
         Chat.Room.leave_room(pid, from)
         {:ok, "OK"}
-      _ -> {:error, "Room #{target} not found."}
+
+      _ ->
+        {:error, "Room #{target} not found."}
     end
   end
 
@@ -72,7 +77,9 @@ defmodule Chat.Command.Executor do
       [{pid, _}] ->
         users = Enum.join(Chat.Room.list_users(pid), ", ")
         {:ok, users}
-      _ -> {:error, "Room #{target} not found."}
+
+      _ ->
+        {:error, "Room #{target} not found."}
     end
   end
 
@@ -88,7 +95,8 @@ defmodule Chat.Command.Executor do
         result = Enum.join(Chat.Room.enter_room(pid, user_handle), ", ")
         {:ok, "entered room #{target}, here are the people #{result}."}
 
-      _ -> {:error, "Room #{target} not found."}
+      _ ->
+        {:error, "Room #{target} not found."}
     end
   end
 
@@ -108,7 +116,9 @@ defmodule Chat.Command.Executor do
       [{pid, nil}] ->
         result = Chat.User.whoami(pid)
         {:ok, result}
-        _ -> {:error, "You don't exist."}
+
+      _ ->
+        {:error, "You don't exist."}
     end
   end
 end

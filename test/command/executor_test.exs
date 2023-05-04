@@ -25,7 +25,7 @@ defmodule Command.ExecutorTest do
 
   test "Can list users in a room" do
     room_name = "test-list-users-dungeon"
-    {status, _pid} = Chat.UserSupervisor.add_user({"room-user", nil})
+    {_status, _pid} = Chat.UserSupervisor.add_user({"room-user", nil})
     Executor.handle_user_command("room-user", {:CREATE, room_name})
     Executor.handle_user_command("room-user", {:ENTER, room_name})
 
