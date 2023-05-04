@@ -61,9 +61,11 @@ defmodule Chat.Room do
     users =
       state.users
       |> Enum.filter(fn u -> u != handle end)
+
     state = %{state | :users => users}
-    if Enum.empty? state.users do
-      DynamicSupervisor.terminate_child Chat.RoomSupervisor, self()
+
+    if Enum.empty?(state.users) do
+      DynamicSupervisor.terminate_child(Chat.RoomSupervisor, self())
       {:stop, :normal, state}
     else
       {:noreply, state}
