@@ -25,8 +25,3 @@ Register your handle
 Display your handle and the rooms you're currently in.
 ### `DISCONNECT`
 Not implemented
-
-
-
-
-

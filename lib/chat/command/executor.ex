@@ -23,7 +23,7 @@ defmodule Chat.Command.Executor do
 
   def handle_user_command(payload, {command}) do
     case command do
-      :DISCONNECT -> {:error, "NOT IMPLEMENTED"}
+      :DISCONNECT -> disconnect(payload)
       :LIST_ROOMS -> list_rooms()
       :WHOAMI -> whoami(payload)
     end
@@ -65,10 +65,10 @@ defmodule Chat.Command.Executor do
     end
   end
 
-  defp leave_room(from, target) do
+  defp leave_room(handle, target) do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, _}] ->
-        Chat.Room.leave_room(pid, from)
+        Chat.Room.leave_room(pid, handle)
         {:ok, "OK"}
 
       _ ->
@@ -123,6 +123,13 @@ defmodule Chat.Command.Executor do
 
       _ ->
         {:error, "You don't exist."}
+    end
+  end
+
+  defp disconnect(handle) do
+    case Registry.lookup(Registry.Users, handle) do
+      [{pid, nil}] ->
+        Chat.User.disconnect(pid)
     end
   end
 end

@@ -40,7 +40,3 @@ defmodule Chat.Command.UserCommand do
     end
   end
 end
-
-
-
-

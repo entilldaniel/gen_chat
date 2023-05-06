@@ -14,9 +14,11 @@ defmodule Chat.User do
   def send_message(pid, message), do: GenServer.cast(pid, {:message, message})
   def whoami(pid), do: GenServer.call(pid, :whoami)
   def add_room(pid, room), do: GenServer.cast(pid, {:room, room})
-
+  def disconnect(pid), do: GenServer.cast(pid, :disconnect)
+  
   @impl true
   def init({name, {channel, proxy}}) do
+    Logger.info("Creating user with handle: #{name}")
     state = %__MODULE__{handle: name, channel: channel, proxy: proxy}
     {:ok, state, {:continue, :user}}
   end
@@ -41,9 +43,21 @@ defmodule Chat.User do
           end
 
         state.proxy.send(state.channel, message)
+      {:error, _} -> :ok
     end
 
     handle_input(state)
+  end
+
+  @impl true
+  def handle_cast(:disconnect, state) do
+    for room <- state.rooms do
+      case Chat.RoomSupervisor.get_room_by_name(room) do
+        {:ok, pid} -> Chat.Room.leave_room(pid, state.handle)
+      end
+    end
+    DynamicSupervisor.terminate_child(Chat.UserSupervisor, self())
+    {:noreply, nil}
   end
 
   @impl true
@@ -63,4 +77,5 @@ defmodule Chat.User do
     message = "HANDLE: #{state.handle}\nROOMS: #{state.rooms}\n"
     {:reply, message, state}
   end
+  
 end
