@@ -1,9 +1,8 @@
 defmodule Chat.User do
   use GenServer
   require Logger
-  alias Chat.Comm.Message
 
-  defstruct handle: nil, rooms: [], socket: nil
+  defstruct handle: nil, rooms: [], channel: nil, proxy: nil
 
   def start_link({name, _} = data) do
     GenServer.start_link(__MODULE__, data, name: process_name(name))
@@ -17,20 +16,20 @@ defmodule Chat.User do
   def add_room(pid, room), do: GenServer.cast(pid, {:room, room})
 
   @impl true
-  def init({name, socket}) do
-    state = %__MODULE__{handle: name, socket: socket}
+  def init({name, {channel, proxy}}) do
+    state = %__MODULE__{handle: name, channel: channel, proxy: proxy}
     {:ok, state, {:continue, :user}}
   end
 
   @impl true
   def handle_continue(:user, state) do
-    Message.send(state.socket, "Welcome #{state.handle}! You are registered!")
+    state.proxy.send(state.channel, "Welcome #{state.handle}! You are registered!")
     Task.async(fn -> handle_input(state) end)
     {:noreply, state}
   end
 
   defp handle_input(state) do
-    case :gen_tcp.recv(state.socket, 0, 10_000) do
+    case state.proxy.receive(state.channel) do
       {:ok, data} ->
         {_, message} =
           case Chat.Command.UserCommand.parse(data) do
@@ -41,13 +40,7 @@ defmodule Chat.User do
               Chat.Command.Executor.handle_user_command(state.handle, command)
           end
 
-        Message.send(state.socket, message)
-
-      {:error, :timeout} ->
-        :ok
-
-      {:error, _} ->
-        :stop
+        state.proxy.send(state.channel, message)
     end
 
     handle_input(state)
@@ -55,7 +48,7 @@ defmodule Chat.User do
 
   @impl true
   def handle_cast({:message, message}, state) do
-    Message.send(state.socket, message)
+    state.proxy.send(state.channel, message)
     {:noreply, state}
   end
 
@@ -71,4 +64,3 @@ defmodule Chat.User do
     {:reply, message, state}
   end
 end
-

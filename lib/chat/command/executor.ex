@@ -1,6 +1,10 @@
 defmodule Chat.Command.Executor do
   require Logger
 
+  def handle_register_command(context, {_command, handle}) do
+    register(context, handle)
+  end
+  
   def handle_user_command(context, {command, target, value}) do
     case command do
       :PUBLIC -> send_room_message(context, target, value)
@@ -14,7 +18,6 @@ defmodule Chat.Command.Executor do
       :EXIT -> leave_room(context, target)
       :ENTER -> enter_room(context, target)
       :LIST_USERS -> list_users(context, target)
-      :REGISTER -> register(context, target)
     end
   end
 
@@ -50,13 +53,14 @@ defmodule Chat.Command.Executor do
     end
   end
 
-  defp register(socket, handle) do
+  defp register({channel, proxy}, handle) do
+    Logger.info("Registering user #{handle}")
     case Registry.lookup(Registry.Users, handle) do
       [{_, nil}] ->
         {:error, "Handle (#{handle}) already taken"}
 
       [] ->
-        Chat.UserSupervisor.add_user({handle, socket})
+        Chat.UserSupervisor.add_user({handle, {channel, proxy}})
         {:ok, "OK, #{handle} REGISTERED"}
     end
   end
