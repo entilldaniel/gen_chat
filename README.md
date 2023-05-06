@@ -1,8 +1,8 @@
 # Gen Chat
 
-This is a simple chat server that I'm implementing in my journey to learn elixir. 
+This is a simple chat library that I'm working on for fun in order to learn elixir. 
 
-The protocol is very simple there are a few commands so far that you can see in `lib/command/user_command.ex`
+The protocol is relatively simple, there are a few commands so far that you can see in `lib/command/user_command.ex`
 
 ## Commands
 ### `PUBLIC`
@@ -27,10 +27,6 @@ Display your handle and the rooms you're currently in.
 Not implemented
 
 
-# Installation #
 
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/chat>.
 
