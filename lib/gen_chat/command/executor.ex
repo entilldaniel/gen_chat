@@ -1,4 +1,4 @@
-defmodule Chat.Command.Executor do
+defmodule GenChat.Command.Executor do
   require Logger
 
   def handle_register_command(context, {_command, handle}) do
@@ -33,7 +33,7 @@ defmodule Chat.Command.Executor do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, nil}] ->
         message = "Room: #{target}\nSENDER: #{sender}\n#{message}"
-        Chat.Room.send_message(pid, {sender, message})
+        GenChat.Room.send_message(pid, {sender, message})
         {:ok, "OK"}
 
       _ ->
@@ -45,7 +45,7 @@ defmodule Chat.Command.Executor do
     case Registry.lookup(Registry.Users, target) do
       [{pid, nil}] ->
         message = "MESSAGE FROM #{sender}\n#{message}"
-        Chat.User.send_message(pid, message)
+        GenChat.User.send_message(pid, message)
         {:ok, "OK"}
 
       _ ->
@@ -60,7 +60,7 @@ defmodule Chat.Command.Executor do
         {:error, "Handle (#{handle}) already taken"}
 
       [] ->
-        Chat.UserSupervisor.add_user({handle, {channel, proxy}})
+        GenChat.UserSupervisor.add_user({handle, {channel, proxy}})
         {:ok, "OK, #{handle} REGISTERED"}
     end
   end
@@ -68,7 +68,7 @@ defmodule Chat.Command.Executor do
   defp leave_room(handle, target) do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, _}] ->
-        Chat.Room.leave_room(pid, handle)
+        GenChat.Room.leave_room(pid, handle)
         {:ok, "OK"}
 
       _ ->
@@ -79,7 +79,7 @@ defmodule Chat.Command.Executor do
   defp list_users(_from, target) do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, _}] ->
-        users = Enum.join(Chat.Room.list_users(pid), ", ")
+        users = Enum.join(GenChat.Room.list_users(pid), ", ")
         {:ok, users}
 
       _ ->
@@ -96,7 +96,7 @@ defmodule Chat.Command.Executor do
   defp enter_room(user_handle, target) do
     case Registry.lookup(Registry.Rooms, target) do
       [{pid, nil}] ->
-        result = Enum.join(Chat.Room.enter_room(pid, user_handle), ", ")
+        result = Enum.join(GenChat.Room.enter_room(pid, user_handle), ", ")
         {:ok, "entered room #{target}, here are the people #{result}."}
 
       _ ->
@@ -110,7 +110,7 @@ defmodule Chat.Command.Executor do
         {:error, "Room #{name} already exists."}
 
       _ ->
-        Chat.RoomSupervisor.add_room(name, handle)
+        GenChat.RoomSupervisor.add_room(name, handle)
         {:ok, "Room created."}
     end
   end
@@ -118,7 +118,7 @@ defmodule Chat.Command.Executor do
   defp whoami(handle) do
     case Registry.lookup(Registry.Users, handle) do
       [{pid, nil}] ->
-        result = Chat.User.whoami(pid)
+        result = GenChat.User.whoami(pid)
         {:ok, result}
 
       _ ->
@@ -129,7 +129,7 @@ defmodule Chat.Command.Executor do
   defp disconnect(handle) do
     case Registry.lookup(Registry.Users, handle) do
       [{pid, nil}] ->
-        Chat.User.disconnect(pid)
+        GenChat.User.disconnect(pid)
     end
   end
 end

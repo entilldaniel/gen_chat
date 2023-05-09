@@ -1,11 +1,11 @@
-defmodule Chat.Command.CommandDispatcher do
+defmodule GenChat.Command.CommandDispatcher do
   require Logger
   
   def dispatch({channel, proxy}, command) do
     {status, message} =
       case command do
         {:REGISTER, _} ->
-          Chat.Command.Executor.handle_register_command({channel, proxy}, command)
+          GenChat.Command.Executor.handle_register_command({channel, proxy}, command)
 
         _ ->
           Logger.warn("Unknown command: #{command}")

@@ -1,4 +1,4 @@
-defmodule Chat.User do
+defmodule GenChat.User do
   use GenServer
   require Logger
 
@@ -34,12 +34,12 @@ defmodule Chat.User do
     case state.proxy.receive(state.channel) do
       {:ok, data} ->
         {_, message} =
-          case Chat.Command.UserCommand.parse(data) do
+          case GenChat.Command.UserCommand.parse(data) do
             {:error, reason} ->
               {:error, reason}
 
             command ->
-              Chat.Command.Executor.handle_user_command(state.handle, command)
+              GenChat.Command.Executor.handle_user_command(state.handle, command)
           end
 
         state.proxy.send(state.channel, message)
@@ -52,11 +52,11 @@ defmodule Chat.User do
   @impl true
   def handle_cast(:disconnect, state) do
     for room <- state.rooms do
-      case Chat.RoomSupervisor.get_room_by_name(room) do
-        {:ok, pid} -> Chat.Room.leave_room(pid, state.handle)
+      case GenChat.RoomSupervisor.get_room_by_name(room) do
+        {:ok, pid} -> GenChat.Room.leave_room(pid, state.handle)
       end
     end
-    DynamicSupervisor.terminate_child(Chat.UserSupervisor, self())
+    DynamicSupervisor.terminate_child(GenChat.UserSupervisor, self())
     {:noreply, nil}
   end
 

@@ -1,4 +1,4 @@
-defmodule Chat.Room do
+defmodule GenChat.Room do
   use GenServer
   require Logger
 
@@ -19,7 +19,7 @@ defmodule Chat.Room do
   def init({name, handle}) do
     state = %__MODULE__{name: name, users: [handle]}
     [{pid, _}] = Registry.lookup(Registry.Users, handle)
-    Chat.User.add_room(pid, state.name)
+    GenChat.User.add_room(pid, state.name)
     {:ok, state}
   end
 
@@ -33,7 +33,7 @@ defmodule Chat.Room do
   def handle_call({:enter, handle}, _from, state) do
     state = %{state | :users => Enum.uniq([handle | state.users])}
     [{pid, _}] = Registry.lookup(Registry.Users, handle)
-    Chat.User.add_room(pid, state.name)
+    GenChat.User.add_room(pid, state.name)
     {:reply, state.users, state}
   end
 
@@ -43,7 +43,7 @@ defmodule Chat.Room do
       Enum.each(state.users, fn user ->
         case Registry.lookup(Registry.Users, user) do
           [{pid, _}] ->
-            Chat.User.send_message(pid, message)
+            GenChat.User.send_message(pid, message)
 
           _ ->
             Logger.info("User #{user} not found.")
@@ -65,7 +65,7 @@ defmodule Chat.Room do
     state = %{state | :users => users}
 
     if Enum.empty?(state.users) do
-      DynamicSupervisor.terminate_child(Chat.RoomSupervisor, self())
+      DynamicSupervisor.terminate_child(GenChat.RoomSupervisor, self())
       {:stop, :normal, state}
     else
       {:noreply, state}

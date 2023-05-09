@@ -30,4 +30,8 @@ defmodule GenChat.MixProject do
       {:ex_doc, "~> 0.29", only: :dev, runtime: false}
     ]
   end
+
 end
+
+
+

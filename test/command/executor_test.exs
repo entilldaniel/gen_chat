@@ -1,10 +1,17 @@
 defmodule Command.ExecutorTest do
   use ExUnit.Case
-  alias Chat.Command.Executor
+  alias GenChat.Command.Executor
+
+  setup_all do
+    opts = [strategy: :one_for_one, name: ServerChat.Supervisor]
+    {status, _} = Supervisor.start_link([{GenChat, []}], opts)
+
+    status
+  end
 
   test "Can create rooms" do
     room = "test-create-room"
-    {_status, _pid} = Chat.UserSupervisor.add_user({"create-room-user", nil})
+    {:ok, _pid} = GenChat.UserSupervisor.add_user({"create-room-user", {:channel, :proxy}})
     {status, message} = Executor.handle_user_command("create-room-user", {:CREATE, room})
     assert status == :ok
     assert message == "Room created."
@@ -15,7 +22,7 @@ defmodule Command.ExecutorTest do
   end
 
   test "Can list rooms" do
-    {_status, _pid} = Chat.UserSupervisor.add_user({"list-room-user", nil})
+    {:ok, _pid} = GenChat.UserSupervisor.add_user({"list-room-user", {:channel, :proxy}})
     Executor.handle_user_command("list-room-user", {:CREATE, "test-attic"})
     {status, result} = Executor.handle_user_command("list_room-user", {:LIST_ROOMS})
 
@@ -25,7 +32,7 @@ defmodule Command.ExecutorTest do
 
   test "Can list users in a room" do
     room_name = "test-list-users-dungeon"
-    {_status, _pid} = Chat.UserSupervisor.add_user({"room-user", nil})
+    {:ok, _pid} = GenChat.UserSupervisor.add_user({"room-user", {:channel, :proxy}})
     Executor.handle_user_command("room-user", {:CREATE, room_name})
     Executor.handle_user_command("room-user", {:ENTER, room_name})
 
@@ -34,3 +41,5 @@ defmodule Command.ExecutorTest do
     assert result == "room-user"
   end
 end
+
+

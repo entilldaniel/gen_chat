@@ -1,5 +1,5 @@
 defmodule ChatTest do
   use ExUnit.Case
-  doctest Chat
+  doctest GenChat
 
 end

@@ -1,4 +1,4 @@
-defmodule Chat.Command.UserCommand do
+defmodule GenChat.Command.UserCommand do
   require Logger
 
   @three_parts [:PUBLIC, :PRIVATE]
