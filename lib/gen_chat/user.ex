@@ -15,7 +15,7 @@ defmodule GenChat.User do
   def whoami(pid), do: GenServer.call(pid, :whoami)
   def add_room(pid, room), do: GenServer.cast(pid, {:room, room})
   def disconnect(pid), do: GenServer.cast(pid, :disconnect)
-  
+
   @impl true
   def init({name, {channel, proxy}}) do
     Logger.info("Creating user with handle: #{name}")
@@ -26,6 +26,7 @@ defmodule GenChat.User do
   @impl true
   def handle_continue(:user, state) do
     state.proxy.send(state.channel, "Welcome #{state.handle}! You are registered!")
+    # Is this a memory leak?
     Task.async(fn -> handle_input(state) end)
     {:noreply, state}
   end
@@ -43,10 +44,15 @@ defmodule GenChat.User do
           end
 
         state.proxy.send(state.channel, message)
-      {:error, _} -> :ok
-    end
+        handle_input(state)
 
-    handle_input(state)
+      :continue ->
+        handle_input(state)
+
+      {:error, _} ->
+        Logger.warn("Got an error, shutting down self: #{inspect(self())}")
+        DynamicSupervisor.terminate_child(GenChat.UserSupervisor, self())
+    end
   end
 
   @impl true
@@ -56,6 +62,7 @@ defmodule GenChat.User do
         {:ok, pid} -> GenChat.Room.leave_room(pid, state.handle)
       end
     end
+
     DynamicSupervisor.terminate_child(GenChat.UserSupervisor, self())
     {:noreply, nil}
   end
@@ -77,5 +84,5 @@ defmodule GenChat.User do
     message = "HANDLE: #{state.handle}\nROOMS: #{state.rooms}\n"
     {:reply, message, state}
   end
-  
+
 end

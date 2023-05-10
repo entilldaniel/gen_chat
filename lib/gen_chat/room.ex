@@ -65,6 +65,7 @@ defmodule GenChat.Room do
     state = %{state | :users => users}
 
     if Enum.empty?(state.users) do
+      Logger.info("Room #{state.name} is empty, shutting down...")
       DynamicSupervisor.terminate_child(GenChat.RoomSupervisor, self())
       {:stop, :normal, state}
     else
