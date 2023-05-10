@@ -2,12 +2,12 @@ defmodule Command.ExecutorTest do
   use ExUnit.Case
   alias GenChat.Command.Executor
 
-  setup_all do
-    opts = [strategy: :one_for_one, name: ServerChat.Supervisor]
-    {status, _} = Supervisor.start_link([{GenChat, []}], opts)
-
+  setup do
+    {status, _pid} = start_supervised(GenChat)
     status
   end
+
+
 
   test "Can create rooms" do
     room = "test-create-room"
