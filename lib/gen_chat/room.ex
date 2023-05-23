@@ -2,18 +2,32 @@ defmodule GenChat.Room do
   use GenServer
   require Logger
 
+  @type t :: %__MODULE__{
+    name: String.t(),
+    users: [String.t()]
+  }
   defstruct name: nil, users: []
 
+
+  @spec enter_room(pid, String.t) :: any()
   def enter_room(pid, user_handle), do: GenServer.call(pid, {:enter, user_handle})
+
+  @spec send_message(pid, {String.t, String.t}) :: any()
   def send_message(pid, envelope), do: GenServer.cast(pid, {:message, envelope})
+
+  @spec list_users(pid) :: any
   def list_users(pid), do: GenServer.call(pid, :list)
+  
+  @spec leave_room(pid, String.t) :: :ok
   def leave_room(pid, user_handle), do: GenServer.cast(pid, {:leave, user_handle})
 
+  @spec start_link({String.t(), any}) :: :ignore | {:error, any} | {:ok, pid}
   def start_link({name, _} = data) do
-    GenServer.start_link(__MODULE__, data, name: process_name(name))
+    GenServer.start_link(__MODULE__, data, name: via_tuple(name))
   end
 
-  defp process_name(name), do: {:via, Registry, {Registry.Rooms, name}}
+  @spec via_tuple(String.t()) :: {:via, module(), {module(), String.t()}}
+  defp via_tuple(name), do: {:via, Registry, {Registry.Rooms, name}}
 
   @impl true
   def init({name, handle}) do
@@ -73,3 +87,4 @@ defmodule GenChat.Room do
     end
   end
 end
+
